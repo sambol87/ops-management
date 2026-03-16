@@ -280,11 +280,72 @@ body { background: var(--bg); color: var(--text); direction: rtl; }
 .report-filters { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
 .report-filters label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
 
+/* ─── Multi-select chips ───────────────────────────────────────────────────── */
+.multi-select-box { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0; }
+.multi-chip {
+  padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.multi-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+.multi-chip:hover:not(.selected) { border-color: var(--primary); color: var(--primary); }
+.empty-hint { font-size: 13px; color: var(--text-muted); font-style: italic; }
+
+/* ─── Absence chips ────────────────────────────────────────────────────────── */
+.absence-chip {
+  padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  background: #FEE2E2; color: #991B1B; cursor: pointer;
+  border: 1px solid #FECACA;
+}
+.absence-chip:hover { background: #FECACA; }
+
+/* ─── Cell actions (+/−) – unified style ───────────────────────────────────── */
+.cell-actions { display: flex; gap: 4px; margin-top: 4px; }
+.btn-cell-action {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 1.5px dashed; background: transparent;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; line-height: 1; padding: 0;
+}
+.btn-cell-add { border-color: var(--primary); color: var(--primary); }
+.btn-cell-add:hover { background: var(--primary-light); border-style: solid; }
+.btn-cell-abs { border-color: var(--danger); color: var(--danger); }
+.btn-cell-abs:hover { background: var(--danger-light); border-style: solid; }
+
+/* ─── Absence date range form ──────────────────────────────────────────────── */
+.form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.date-range-preview {
+  background: var(--primary-light); color: var(--primary);
+  border-radius: 8px; padding: 6px 12px;
+  font-size: 13px; font-weight: 600; text-align: center;
+}
+
+/* ─── Visit chip details ───────────────────────────────────────────────────── */
+.chip-branch { font-weight: 600; font-size: 11px; }
+.chip-types { font-size: 10px; opacity: .85; margin-top: 1px; }
+
+/* ─── Table scrollable wrapper ─────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+.planning-scroll { overflow-x: auto; }
+
+/* ─── Export button row ────────────────────────────────────────────────────── */
+.export-row { display: flex; justify-content: flex-start; margin-bottom: 10px; }
+
+/* ─── Admin mall form ──────────────────────────────────────────────────────── */
+.mall-form-box { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 4px; }
+.brands-in-mall { display: flex; flex-direction: column; gap: 6px; }
+.brands-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+
+/* ─── Chart card – fix overflow ────────────────────────────────────────────── */
+.chart-card { overflow: hidden; }
+.chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
 /* ─── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .app-main { padding: 12px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .charts-grid { grid-template-columns: 1fr; }
-  .planning-grid { grid-template-columns: 120px repeat(7, minmax(100px, 1fr)); }
   .app-header { padding: 0 12px; }
 }
