@@ -856,7 +856,7 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
           <PieChartCard title="ביקורים לפי מותג" data={byBrand}/>
           <PieChartCard title="מתוכנן / לא מתוכנן" data={[{name:"מתוכנן",value:planned},{name:"לא מתוכנן",value:unplanned}].filter(x=>x.value>0)}/>
           <div className="chart-card full-width">
-            <h3><h3>טופ 5 מותגים</h3>
+            <h3>טופ 5 מותגים</h3>
             {top5.length>0 ? (
               <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
                 <BarChart data={top5} layout="vertical" margin={{top:5,right:40,bottom:5,left:0}}>
