@@ -798,7 +798,7 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
   const planned=filtered.filter(v=>!v.isUnplanned).length;
   const unplanned=filtered.filter(v=>v.isUnplanned).length;
   const brandMallCountR={};
-  filtered.forEach(v=>{if(v.brand&&v.mall){const k=`${v.brand} ${v.mall}`;brandMallCountR[k]=(brandMallCountR[k]||0)+1;}});
+  filtered.filter(v=>v.mode==="actual").forEach(v=>{if(v.brand&&v.mall){const k=`${v.brand} ${v.mall}`;brandMallCountR[k]=(brandMallCountR[k]||0)+1;}});
   const top5=Object.entries(brandMallCountR).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value}));
 
   const reportTabs=[
