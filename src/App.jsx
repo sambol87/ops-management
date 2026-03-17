@@ -223,21 +223,31 @@ function VisitForm({ worker, onSave, onClose, visitTypeNames, cities, malls, mod
 }
 
 // ─── Pie Chart Card ────────────────────────────────────────────────────────────
+const PASTEL_COLORS = ["#7EB8C9","#8DC8A0","#E8A87C","#C4A3D0","#F0C987","#88C0B8","#E89B9B","#A3BBDC","#B5D5A0","#D4A8C0"];
+
 function PieChartCard({ title, data }) {
   if (!data || data.length === 0) return (
     <div className="chart-card"><h3>{title}</h3><div className="empty-chart">אין נתונים</div></div>
   );
+  const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    if (percent < 0.05) return null;
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={700}>{`${(percent*100).toFixed(0)}%`}</text>;
+  };
   return (
     <div className="chart-card">
       <h3>{title}</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart margin={{top:5,right:10,bottom:60,left:10}}>
-          <Pie data={data} dataKey="value" nameKey="name" outerRadius={80}
-            label={({percent}) => `${(percent*100).toFixed(0)}%`} labelLine>
-            {data.map((_,i) => <Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
+      <ResponsiveContainer width="100%" height={280}>
+        <PieChart margin={{top:5,right:5,bottom:5,left:5}}>
+          <Pie data={data} dataKey="value" nameKey="name" outerRadius={95}
+            label={renderLabel} labelLine={false}>
+            {data.map((_,i) => <Cell key={i} fill={PASTEL_COLORS[i%PASTEL_COLORS.length]}/>)}
           </Pie>
-          <Tooltip/>
-          <Legend wrapperStyle={{fontSize:12,paddingTop:8}}/>
+          <Tooltip formatter={(v,n)=>[v,n]}/>
+          <Legend wrapperStyle={{fontSize:12,paddingTop:12}} iconType="circle" iconSize={10}/>
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -268,7 +278,15 @@ function DashboardTab({ visits, absences, visitTypeNames }) {
 
   const absByType = ABSENCE_TYPES.map(t => ({name:t,value:filtAbs.filter(a=>a.absenceType===t).length})).filter(x=>x.value>0);
 
-  const top5 = Object.entries(brandCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value}));
+  // Top5: key = "Brand | Mall"
+  const brandMallCount = {};
+  filtered.forEach(v => {
+    if (v.brand && v.mall) {
+      const key = `${v.brand} | ${v.mall}`;
+      brandMallCount[key] = (brandMallCount[key]||0)+1;
+    }
+  });
+  const top5 = Object.entries(brandMallCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value}));
 
   return (
     <div className="tab-content">
@@ -399,7 +417,13 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
           {/* Worker rows */}
           {workers.map(worker => (
             <>
-              <div key={`n-${worker.id}`} className="worker-name-cell">{worker.name}</div>
+              <div key={`n-${worker.id}`} className="worker-name-cell">
+                <span>{worker.name}</span>
+                <div className="worker-actions">
+                  <button className="btn-cell-action btn-cell-add" title="הוסף ביקור" onClick={()=>openVisitForm(worker)}>+</button>
+                  <button className="btn-cell-action btn-cell-abs" title="סמן היעדרות" onClick={()=>openAbsenceForm(worker)}>−</button>
+                </div>
+              </div>
               {weekDays.map(date => {
                 const dayVisits = getVisits(worker.id, date);
                 const absence = getAbsence(worker.id, date);
@@ -414,10 +438,10 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                     )}
                     {/* Visit chips */}
                     {dayVisits.map(v => (
-                      <div key={v.id} className={`visit-chip${v.isUnplanned?" unplanned":" planned"}${v.resolved?" resolved":""}`} onClick={()=>setEditVisit(v)}>
+                      <div key={v.id} className={`visit-chip${v.isUnplanned?" unplanned":" planned"}`} onClick={()=>setEditVisit(v)}>
                         <div className="chip-branch">{v.mall} · {v.brand}</div>
                         {Array.isArray(v.visitTypes)&&v.visitTypes.length>0 && <div className="chip-types">{v.visitTypes.join(", ")}</div>}
-                        {mode==="actual"&&v.resolved && <span className="resolved-badge"> ✓</span>}
+                        {mode==="actual"&&v.resolved && <span className="resolved-badge">✓</span>}
                       </div>
                     ))}
                     {/* Clock in/out – actual only */}
@@ -431,11 +455,7 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                           : clock?.checkIn && <button className="btn-clock out" onClick={()=>onClock(worker.id,date,"out")}>יציאה</button>}
                       </div>
                     )}
-                    {/* + / − action buttons */}
-                    <div className="cell-actions">
-                      <button className="btn-cell-action btn-cell-add" title="הוסף ביקור" onClick={()=>openVisitForm(worker)}>+</button>
-                      <button className="btn-cell-action btn-cell-abs" title="סמן היעדרות" onClick={()=>openAbsenceForm(worker)}>−</button>
-                    </div>
+
                   </div>
                 );
               })}
@@ -491,22 +511,58 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
 
 // ─── Heat Map ──────────────────────────────────────────────────────────────────
 function HeatMapTab({ workers, visits }) {
-  const getCount = (wid,mode) => [...new Set(visits.filter(v=>v.workerId===wid&&v.mode===mode).map(v=>`${v.date}|${v.mall}|${v.brand}`))].length;
+  // Build sets of "date|mall|brand" for planned and actual
+  const getVisitKeys = (wid, mode) =>
+    new Set(visits.filter(v=>v.workerId===wid&&v.mode===mode).map(v=>`${v.date}|${v.mall}|${v.brand}`));
+
   return (
     <div className="tab-content">
       <h2 className="section-title">מפת חום – תכנון מול ביצוע</h2>
+      <div className="heatmap-legend">
+        <span className="hm-dot" style={{background:"#A8D5B0"}}/> ביצוע מדויק
+        <span className="hm-dot" style={{background:"#F5D98B"}}/> ביקור שונה מהתכנון
+        <span className="hm-dot" style={{background:"#F0A8A8"}}/> לא בוצע
+      </div>
       <table className="data-table">
-        <thead><tr><th>עובד</th><th>מתוכנן</th><th>בפועל</th><th>אחוז ביצוע</th><th>חיווי</th></tr></thead>
+        <thead>
+          <tr><th>עובד</th><th>מתוכנן</th><th>בוצע בדיוק</th><th>שונה מהתכנון</th><th>לא בוצע</th><th>חיווי כולל</th></tr>
+        </thead>
         <tbody>
           {workers.map(w => {
-            const p=getCount(w.id,"planned"), a=getCount(w.id,"actual");
-            const pct = p===0 ? 0 : Math.round((a/p)*100);
-            const color = pct>=90?"#16A34A":pct>=60?"#D97706":"#DC2626";
+            const plannedKeys = getVisitKeys(w.id, "planned");
+            const actualKeys  = getVisitKeys(w.id, "actual");
+
+            const exact    = [...plannedKeys].filter(k => actualKeys.has(k)).length;
+            const notDone  = [...plannedKeys].filter(k => !actualKeys.has(k)).length;
+            const extra    = [...actualKeys].filter(k => !plannedKeys.has(k)).length;
+            const total    = plannedKeys.size;
+
+            // Status: green if all planned done exactly, yellow if some done but differently, red if nothing done
+            const color = total === 0
+              ? "#C0C4D0"
+              : notDone === 0
+                ? "#A8D5B0"   // all done exactly – pastel green
+                : exact > 0 || extra > 0
+                  ? "#F5D98B" // some done but not all planned – pastel yellow
+                  : "#F0A8A8"; // nothing from plan done – pastel red
+
+            const label = total === 0 ? "אין תכנון"
+              : notDone === 0 ? "✓ מדויק"
+              : extra > 0 && exact === 0 ? "⚠ שונה"
+              : "✗ חסר";
+
             return (
               <tr key={w.id}>
-                <td>{w.name}</td><td>{p}</td><td>{a}</td>
-                <td><div className="progress-bar-wrap"><div className="progress-bar" style={{width:`${Math.min(pct,100)}%`,background:color}}/><span>{pct}%</span></div></td>
-                <td><span className="status-dot" style={{background:color}}/> {pct>=90?"תקין":pct>=60?"חלקי":"נמוך"}</td>
+                <td>{w.name}</td>
+                <td>{total}</td>
+                <td><span className="hm-count green">{exact}</span></td>
+                <td><span className="hm-count yellow">{extra}</span></td>
+                <td><span className="hm-count red">{notDone}</span></td>
+                <td>
+                  <span className="hm-badge" style={{background:color}}>
+                    {label}
+                  </span>
+                </td>
               </tr>
             );
           })}
