@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
-import * as XLSX from "xlsx";
+// Excel export – no external dependency needed
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 // ─── Firebase ──────────────────────────────────────────────────────────────────
@@ -741,11 +741,29 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
   const filtered = visits.filter(v=>v.date>=from&&v.date<=to);
   const filtAbs = absences.filter(a=>a.date>=from&&a.date<=to);
 
-  const exportToExcel = (data,fileName) => {
-    const ws=XLSX.utils.json_to_sheet(data);
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"דוח");
-    XLSX.utils.writeFile(wb,`${fileName}.xlsx`);
+  const exportToExcel = (data, fileName) => {
+    if (!data || data.length === 0) { alert("אין נתונים לייצוא"); return; }
+    const headers = Object.keys(data[0]);
+    const bom = "\uFEFF"; // UTF-8 BOM for Hebrew in Excel
+    const csvRows = [
+      headers.join(","),
+      ...data.map(row => headers.map(h => {
+        const val = row[h] === null || row[h] === undefined ? "" : String(row[h]);
+        // Wrap in quotes if contains comma, newline or quote
+        return val.includes(",") || val.includes("\n") || val.includes('"')
+          ? `"${val.replace(/"/g, '""')}"` : val;
+      }).join(","))
+    ];
+    const csvContent = bom + csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileName}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const summaryData = filtered.map(v=>({
