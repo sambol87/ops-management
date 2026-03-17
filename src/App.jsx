@@ -81,12 +81,12 @@ function MultiChips({ options, selected, onChange }) {
 }
 
 // ─── Absence Form – with date RANGE ───────────────────────────────────────────
-function AbsenceForm({ worker, onSave, onClose }) {
+function AbsenceForm({ worker, onSave, onClose, defaultDate }) {
   const [form, setForm] = useState({
     workerId: worker?.id||"",
     workerName: worker?.name||"",
-    dateFrom: today(),
-    dateTo: today(),
+    dateFrom: defaultDate || today(),
+    dateTo: defaultDate || today(),
     absenceType: "חופשה",
     notes: "",
   });
@@ -132,14 +132,14 @@ function AbsenceForm({ worker, onSave, onClose }) {
 }
 
 // ─── Visit Form ────────────────────────────────────────────────────────────────
-function VisitForm({ worker, onSave, onClose, visitTypeNames, cities, malls, mode, existing }) {
+function VisitForm({ worker, onSave, onClose, visitTypeNames, cities, malls, mode, existing, defaultDate }) {
   const [form, setForm] = useState(existing ? {
     ...existing,
     visitTypes: Array.isArray(existing.visitTypes) ? existing.visitTypes : (existing.visitType ? [existing.visitType] : []),
   } : {
     workerId: worker?.id||"",
     workerName: worker?.name||"",
-    date: today(),
+    date: defaultDate || today(),
     city: "",
     mall: "",
     brand: "",
@@ -312,13 +312,13 @@ function DashboardTab({ visits, absences, visitTypeNames }) {
         <div className="chart-card full-width">
           <h3>טופ 5 מותגים לפי תדירות ביקורים</h3>
           {top5.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={top5} layout="vertical" margin={{top:5,right:30,bottom:5,left:10}}>
-                <CartesianGrid strokeDasharray="3 3"/>
-                <XAxis type="number"/>
-                <YAxis type="category" dataKey="name" width={150} tick={{fontSize:12}}/>
-                <Tooltip/>
-                <Bar dataKey="value" fill="#2563EB" radius={[0,4,4,0]}/>
+            <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
+              <BarChart data={top5} layout="vertical" margin={{top:5,right:40,bottom:5,left:0}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
+                <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
+                <YAxis type="category" dataKey="name" width={200} tick={{fontSize:12,fill:"#4A4D65"}} axisLine={false} tickLine={false}/>
+                <Tooltip cursor={{fill:"#F7F8FC"}}/>
+                <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
               </BarChart>
             </ResponsiveContainer>
           ) : <div className="empty-chart">אין נתונים</div>}
@@ -390,8 +390,9 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
   const getAbsence = (wid,date) => absences.find(a => a.workerId===wid && a.date===date);
   const getClock = (wid,date) => clockEvents.find(c => c.workerId===wid && c.date===date);
 
-  const openVisitForm = (worker) => { setSelectedWorker(worker); setShowVisitForm(true); };
-  const openAbsenceForm = (worker) => { setSelectedWorker(worker); setShowAbsenceForm(true); };
+  const [selectedDate, setSelectedDate] = useState(today());
+  const openVisitForm = (worker, date) => { setSelectedWorker(worker); setSelectedDate(date); setShowVisitForm(true); };
+  const openAbsenceForm = (worker, date) => { setSelectedWorker(worker); setSelectedDate(date); setShowAbsenceForm(true); };
 
   return (
     <div className="tab-content">
@@ -419,10 +420,6 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
             <>
               <div key={`n-${worker.id}`} className="worker-name-cell">
                 <span>{worker.name}</span>
-                <div className="worker-actions">
-                  <button className="btn-cell-action btn-cell-add" title="הוסף ביקור" onClick={()=>openVisitForm(worker)}>+</button>
-                  <button className="btn-cell-action btn-cell-abs" title="סמן היעדרות" onClick={()=>openAbsenceForm(worker)}>−</button>
-                </div>
               </div>
               {weekDays.map(date => {
                 const dayVisits = getVisits(worker.id, date);
@@ -430,6 +427,11 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                 const clock = getClock(worker.id, date);
                 return (
                   <div key={`${worker.id}-${date}`} className={`day-cell${date===today()?" today-cell":""}`}>
+                    {/* +/- buttons at top of each cell */}
+                    <div className="day-cell-actions">
+                      <button className="btn-cell-action btn-cell-add" title="הוסף ביקור" onClick={()=>openVisitForm(worker,date)}>+</button>
+                      <button className="btn-cell-action btn-cell-abs" title="סמן היעדרות" onClick={()=>openAbsenceForm(worker,date)}>−</button>
+                    </div>
                     {/* Absence indicator */}
                     {absence && (
                       <div className="absence-chip" onClick={()=>{ if(confirm("למחוק היעדרות?")) onDeleteAbsence(absence.id); }}>
@@ -455,7 +457,6 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                           : clock?.checkIn && <button className="btn-clock out" onClick={()=>onClock(worker.id,date,"out")}>יציאה</button>}
                       </div>
                     )}
-
                   </div>
                 );
               })}
@@ -468,6 +469,7 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
         <Modal title="הוספת ביקור" onClose={()=>setShowVisitForm(false)}>
           <VisitForm
             worker={selectedWorker}
+            defaultDate={selectedDate}
             onSave={async f => { await onAddVisit({...f, mode}); setShowVisitForm(false); }}
             onClose={()=>setShowVisitForm(false)}
             visitTypeNames={visitTypeNames}
@@ -482,6 +484,7 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
         <Modal title="הוספת היעדרות" onClose={()=>setShowAbsenceForm(false)}>
           <AbsenceForm
             worker={selectedWorker}
+            defaultDate={selectedDate}
             onSave={async f => { await onAddAbsence(f); setShowAbsenceForm(false); }}
             onClose={()=>setShowAbsenceForm(false)}
           />
@@ -511,61 +514,62 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
 
 // ─── Heat Map ──────────────────────────────────────────────────────────────────
 function HeatMapTab({ workers, visits }) {
-  // Build sets of "date|mall|brand" for planned and actual
-  const getVisitKeys = (wid, mode) =>
-    new Set(visits.filter(v=>v.workerId===wid&&v.mode===mode).map(v=>`${v.date}|${v.mall}|${v.brand}`));
+  // Logic: start from actual visits, check against planned
+  // Green  = actual visit exists AND matches planned (same mall+brand on same date)
+  // Yellow = actual visit exists BUT no matching planned (unplanned), OR planned exists but different location visited
+  // Red    = planned exists, NO actual visit at all that date for that worker
+
+  const workerStats = workers.map(w => {
+    const wPlanned = visits.filter(v=>v.workerId===w.id&&v.mode==="planned");
+    const wActual  = visits.filter(v=>v.workerId===w.id&&v.mode==="actual");
+
+    // For each actual visit: was it planned?
+    let green=0, yellowActual=0;
+    wActual.forEach(a => {
+      const matched = wPlanned.some(p=>p.date===a.date&&p.mall===a.mall&&p.brand===a.brand);
+      if (matched) green++; else yellowActual++;
+    });
+
+    // For each planned visit: was it executed at all that date?
+    let red=0, yellowPlanned=0;
+    wPlanned.forEach(p => {
+      const anyActualThatDay = wActual.some(a=>a.date===p.date);
+      const exactMatch       = wActual.some(a=>a.date===p.date&&a.mall===p.mall&&a.brand===p.brand);
+      if (!anyActualThatDay) red++;             // planned, nothing done
+      else if (!exactMatch) yellowPlanned++;    // something done but not exact
+    });
+
+    const yellow = yellowActual + yellowPlanned;
+    const total = wPlanned.length;
+    const statusColor = red>0 ? "#F0A8A8" : yellow>0 ? "#F5D98B" : total>0 ? "#A8D5B0" : "#E0E2EA";
+    const statusLabel = red>0 ? "✗ חסר ביצוע" : yellow>0 ? "⚠ חלקי" : total>0 ? "✓ מדויק" : "אין תכנון";
+
+    return { w, green, yellow, red, total, statusColor, statusLabel };
+  });
 
   return (
     <div className="tab-content">
       <h2 className="section-title">מפת חום – תכנון מול ביצוע</h2>
       <div className="heatmap-legend">
-        <span className="hm-dot" style={{background:"#A8D5B0"}}/> ביצוע מדויק
-        <span className="hm-dot" style={{background:"#F5D98B"}}/> ביקור שונה מהתכנון
-        <span className="hm-dot" style={{background:"#F0A8A8"}}/> לא בוצע
+        <span><span className="hm-dot" style={{background:"#A8D5B0"}}/> ביצוע תואם תכנון</span>
+        <span><span className="hm-dot" style={{background:"#F5D98B"}}/> ביקור שונה מהתכנון</span>
+        <span><span className="hm-dot" style={{background:"#F0A8A8"}}/> תוכנן ולא בוצע</span>
       </div>
       <table className="data-table">
         <thead>
-          <tr><th>עובד</th><th>מתוכנן</th><th>בוצע בדיוק</th><th>שונה מהתכנון</th><th>לא בוצע</th><th>חיווי כולל</th></tr>
+          <tr><th>עובד</th><th>ביקורים מתוכננים</th><th>תואם תכנון</th><th>שונה מתכנון</th><th>לא בוצע</th><th>סטטוס</th></tr>
         </thead>
         <tbody>
-          {workers.map(w => {
-            const plannedKeys = getVisitKeys(w.id, "planned");
-            const actualKeys  = getVisitKeys(w.id, "actual");
-
-            const exact    = [...plannedKeys].filter(k => actualKeys.has(k)).length;
-            const notDone  = [...plannedKeys].filter(k => !actualKeys.has(k)).length;
-            const extra    = [...actualKeys].filter(k => !plannedKeys.has(k)).length;
-            const total    = plannedKeys.size;
-
-            // Status: green if all planned done exactly, yellow if some done but differently, red if nothing done
-            const color = total === 0
-              ? "#C0C4D0"
-              : notDone === 0
-                ? "#A8D5B0"   // all done exactly – pastel green
-                : exact > 0 || extra > 0
-                  ? "#F5D98B" // some done but not all planned – pastel yellow
-                  : "#F0A8A8"; // nothing from plan done – pastel red
-
-            const label = total === 0 ? "אין תכנון"
-              : notDone === 0 ? "✓ מדויק"
-              : extra > 0 && exact === 0 ? "⚠ שונה"
-              : "✗ חסר";
-
-            return (
-              <tr key={w.id}>
-                <td>{w.name}</td>
-                <td>{total}</td>
-                <td><span className="hm-count green">{exact}</span></td>
-                <td><span className="hm-count yellow">{extra}</span></td>
-                <td><span className="hm-count red">{notDone}</span></td>
-                <td>
-                  <span className="hm-badge" style={{background:color}}>
-                    {label}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
+          {workerStats.map(({w,green,yellow,red,total,statusColor,statusLabel}) => (
+            <tr key={w.id}>
+              <td>{w.name}</td>
+              <td>{total}</td>
+              <td><span className="hm-count green">{green}</span></td>
+              <td><span className="hm-count yellow">{yellow}</span></td>
+              <td><span className="hm-count red">{red}</span></td>
+              <td><span className="hm-badge" style={{background:statusColor}}>{statusLabel}</span></td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
