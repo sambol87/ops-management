@@ -908,7 +908,7 @@ export default function App() {
     <div className="app" dir="rtl">
       <header className="app-header">
         <div className="header-logo">
-          <img src="/logo.png" alt="לוגו" className="logo-img"
+          <img src="/logo.jpg" alt="לוגו" className="logo-img"
             onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}/>
           <div className="logo-icon-fallback" style={{display:"none"}}>🏢</div>
           <div className="logo-divider"/>
