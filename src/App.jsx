@@ -427,8 +427,7 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                 const clock = getClock(worker.id, date);
                 return (
                   <div key={`${worker.id}-${date}`} className={`day-cell${date===today()?" today-cell":""}`}>
-                    {/* +/- buttons at top of each cell */}
-                    <div className="day-cell-actions">
+                    <div className="cell-top-bar">
                       <button className="btn-cell-action btn-cell-add" title="הוסף ביקור" onClick={()=>openVisitForm(worker,date)}>+</button>
                       <button className="btn-cell-action btn-cell-abs" title="סמן היעדרות" onClick={()=>openAbsenceForm(worker,date)}>−</button>
                     </div>
@@ -446,9 +445,9 @@ function VisitsTab({ mode, workers, visits, absences, visitTypeNames, cities, ma
                         {mode==="actual"&&v.resolved && <span className="resolved-badge">✓</span>}
                       </div>
                     ))}
-                    {/* Clock in/out – actual only */}
+                    {/* Clock in/out – pushed to bottom of cell */}
                     {mode==="actual" && (
-                      <div className="clock-row">
+                      <div className="clock-row clock-row-bottom">
                         {clock?.checkIn
                           ? <span className="clock-badge in">כניסה: {formatTime(clock.checkIn)}</span>
                           : <button className="btn-clock in" onClick={()=>onClock(worker.id,date,"in")}>כניסה</button>}
@@ -798,7 +797,9 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
   const byBrand=Object.entries(brandCount).map(([name,value])=>({name,value})).filter(x=>x.value>0);
   const planned=filtered.filter(v=>!v.isUnplanned).length;
   const unplanned=filtered.filter(v=>v.isUnplanned).length;
-  const top5=Object.entries(brandCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value}));
+  const brandMallCountR={};
+  filtered.forEach(v=>{if(v.brand&&v.mall){const k=`${v.brand} ${v.mall}`;brandMallCountR[k]=(brandMallCountR[k]||0)+1;}});
+  const top5=Object.entries(brandMallCountR).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value}));
 
   const reportTabs=[
     {key:"summary",label:"סיכום ביקורים"},
@@ -855,8 +856,18 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
           <PieChartCard title="ביקורים לפי מותג" data={byBrand}/>
           <PieChartCard title="מתוכנן / לא מתוכנן" data={[{name:"מתוכנן",value:planned},{name:"לא מתוכנן",value:unplanned}].filter(x=>x.value>0)}/>
           <div className="chart-card full-width">
-            <h3>טופ 5 מותגים</h3>
-            {top5.length>0?<ResponsiveContainer width="100%" height={240}><BarChart data={top5} layout="vertical" margin={{top:5,right:30,bottom:5,left:10}}><CartesianGrid strokeDasharray="3 3"/><XAxis type="number"/><YAxis type="category" dataKey="name" width={150} tick={{fontSize:12}}/><Tooltip/><Bar dataKey="value" fill="#2563EB" radius={[0,4,4,0]}/></BarChart></ResponsiveContainer>:<div className="empty-chart">אין נתונים</div>}
+            <h3><h3>טופ 5 מותגים</h3>
+            {top5.length>0 ? (
+              <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
+                <BarChart data={top5} layout="vertical" margin={{top:5,right:40,bottom:5,left:0}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
+                  <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
+                  <YAxis type="category" dataKey="name" width={220} tick={{fontSize:12,fill:"#4A4D65"}} axisLine={false} tickLine={false}/>
+                  <Tooltip cursor={{fill:"#F7F8FC"}}/>
+                  <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <div className="empty-chart">אין נתונים</div>}}
           </div>
         </div>
       )}
