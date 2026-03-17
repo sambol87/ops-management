@@ -907,7 +907,13 @@ export default function App() {
   return (
     <div className="app" dir="rtl">
       <header className="app-header">
-        <div className="header-logo"><span className="logo-icon">🏢</span><span className="logo-text">ניהול תפעול שטח</span></div>
+        <div className="header-logo">
+          <img src="/logo.png" alt="לוגו" className="logo-img"
+            onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}/>
+          <div className="logo-icon-fallback" style={{display:"none"}}>🏢</div>
+          <div className="logo-divider"/>
+          <span className="logo-text">ניהול תפעול שטח</span>
+        </div>
         <nav className="app-nav">
           {tabs.map(t=><button key={t.key} className={tab===t.key?"nav-tab active":"nav-tab"} onClick={()=>setTab(t.key)}>{t.label}</button>)}
         </nav>
