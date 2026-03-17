@@ -867,7 +867,7 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
                   <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
                 </BarChart>
               </ResponsiveContainer>
-            ) : <div className="empty-chart">אין נתונים</div>}}
+            ) : <div className="empty-chart">אין נתונים</div>}
           </div>
         </div>
       )}
