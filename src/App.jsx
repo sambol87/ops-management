@@ -313,10 +313,12 @@ function DashboardTab({ visits, absences, visitTypeNames }) {
           <h3>טופ 5 מותגים לפי תדירות ביקורים</h3>
           {top5.length > 0 ? (
             <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
-              <BarChart data={top5} layout="vertical" margin={{top:5,right:40,bottom:5,left:0}}>
+              <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:190}}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
                 <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
-                <YAxis type="category" dataKey="name" width={200} tick={{fontSize:12,fill:"#4A4D65"}} axisLine={false} tickLine={false}/>
+                <YAxis type="category" dataKey="name" width={0} tick={({y,payload})=>(
+                  <text x={-5} y={y} dy={4} textAnchor="end" fill="#4A4D65" fontSize={12}>{payload.value}</text>
+                )} axisLine={false} tickLine={false}/>
                 <Tooltip cursor={{fill:"#F7F8FC"}}/>
                 <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
               </BarChart>
@@ -859,10 +861,12 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
             <h3>טופ 5 מותגים</h3>
             {top5.length>0 ? (
               <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
-                <BarChart data={top5} layout="vertical" margin={{top:5,right:40,bottom:5,left:0}}>
+                <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:190}}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
                   <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
-                  <YAxis type="category" dataKey="name" width={220} tick={{fontSize:12,fill:"#4A4D65"}} axisLine={false} tickLine={false}/>
+                  <YAxis type="category" dataKey="name" width={0} tick={({y,payload})=>(
+                    <text x={-5} y={y} dy={4} textAnchor="end" fill="#4A4D65" fontSize={12}>{payload.value}</text>
+                  )} axisLine={false} tickLine={false}/>
                   <Tooltip cursor={{fill:"#F7F8FC"}}/>
                   <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
                 </BarChart>
