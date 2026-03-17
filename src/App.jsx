@@ -313,14 +313,12 @@ function DashboardTab({ visits, absences, visitTypeNames }) {
           <h3>טופ 5 מותגים לפי תדירות ביקורים</h3>
           {top5.length > 0 ? (
             <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
-              <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:190}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
+              <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:10}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7" horizontal={false}/>
                 <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
-                <YAxis type="category" dataKey="name" width={0} tick={({y,payload})=>(
-                  <text x={-5} y={y} dy={4} textAnchor="end" fill="#4A4D65" fontSize={12}>{payload.value}</text>
-                )} axisLine={false} tickLine={false}/>
+                <YAxis type="category" dataKey="name" width={200} tick={{fontSize:12,fill:"#4A4D65",textAnchor:"start"}} axisLine={false} tickLine={false} mirror={true}/>
                 <Tooltip cursor={{fill:"#F7F8FC"}}/>
-                <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
+                <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28} label={{position:"right",fill:"#4A4D65",fontSize:12,fontWeight:700}}/>
               </BarChart>
             </ResponsiveContainer>
           ) : <div className="empty-chart">אין נתונים</div>}
@@ -859,19 +857,17 @@ function ReportsTab({ visits, absences, workers, malls, clockEvents }) {
           <PieChartCard title="מתוכנן / לא מתוכנן" data={[{name:"מתוכנן",value:planned},{name:"לא מתוכנן",value:unplanned}].filter(x=>x.value>0)}/>
           <div className="chart-card full-width">
             <h3>טופ 5 מותגים</h3>
-            {top5.length>0 ? (
-              <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
-                <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:190}}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7"/>
-                  <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
-                  <YAxis type="category" dataKey="name" width={0} tick={({y,payload})=>(
-                    <text x={-5} y={y} dy={4} textAnchor="end" fill="#4A4D65" fontSize={12}>{payload.value}</text>
-                  )} axisLine={false} tickLine={false}/>
-                  <Tooltip cursor={{fill:"#F7F8FC"}}/>
-                  <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28}/>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <div className="empty-chart">אין נתונים</div>}
+            {top5.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(200, top5.length * 56)}>
+              <BarChart data={top5} layout="vertical" margin={{top:5,right:20,bottom:5,left:10}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F1F7" horizontal={false}/>
+                <XAxis type="number" tick={{fontSize:12,fill:"#8B90AB"}} axisLine={false} tickLine={false} allowDecimals={false}/>
+                <YAxis type="category" dataKey="name" width={200} tick={{fontSize:12,fill:"#4A4D65",textAnchor:"start"}} axisLine={false} tickLine={false} mirror={true}/>
+                <Tooltip cursor={{fill:"#F7F8FC"}}/>
+                <Bar dataKey="value" fill="#9BBDD4" radius={[0,6,6,0]} barSize={28} label={{position:"right",fill:"#4A4D65",fontSize:12,fontWeight:700}}/>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : <div className="empty-chart">אין נתונים</div>}
           </div>
         </div>
       )}
