@@ -396,9 +396,11 @@ body { background: var(--bg); color: var(--text); direction: rtl; min-height: 10
   display: flex; flex-direction: column; gap: 4px;
 }
 .day-cell.today-cell { background: rgba(44,47,69,.018); }
-.day-cell-actions {
-  display: flex; gap: 4px; margin-bottom: 2px;
-  justify-content: flex-end;
+
+/* +/− bar at top of each cell: minus on left, plus on right */
+.cell-top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 3px;
 }
 
 /* Visit chips */
@@ -430,6 +432,7 @@ body { background: var(--bg); color: var(--text); direction: rtl; min-height: 10
 
 /* Clock */
 .clock-row { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+.clock-row-bottom { margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--border-soft); }
 .clock-badge { font-size: 10px; padding: 3px 7px; border-radius: 100px; font-weight: 600; }
 .clock-badge.in { background: var(--sage-light); color: var(--sage); }
 .clock-badge.out { background: var(--rose-light); color: var(--rose); }
